@@ -13,23 +13,43 @@ import torch.nn.functional as F
 
 class WeaponsDataset(Dataset):
 
-    def __init__(self, transform=None):
+    def __init__(self):
         self.samples = []
+        self.transform = transforms.Compose(
+        [transforms.Resize((64, 64)),
+        transforms.Normalize((0.5, 0.5, 0.5, 0.5), (0.5, 0.5, 0.5, 0.5))]
+        )
 
-        self.transform = transform
-        img_folder_path = "./data/Dark_Souls_1_Weapons"
-        image_paths = [join(img_folder_path, f) for f in listdir(img_folder_path)]
-        for path in image_paths:
+        # Get Dark Souls 1 weapons
+        ds1_img_folder_path = "./data/Dark_Souls_1_Weapons"
+        ds1_image_paths = [join(ds1_img_folder_path, f) for f in listdir(ds1_img_folder_path)]
+        for path in ds1_image_paths:
             img = Image.open(path)
             image_tensor = pil_to_tensor(img)
             image_tensor = image_tensor / 255
 
-            if self.transform is not None:
-                image_tensor = self.transform(image_tensor)
+           
+            image_tensor = self.transform(image_tensor)
 
             # image_tensor = F.pad(input=image_tensor, pad=(0, 10, 0, 0, 0, 0), mode="constant", value=-1)
 
             self.samples.append(image_tensor)
+
+        # Get Dark Souls 2 weapons
+        ds2_img_folder_path = "./data/Dark_Souls_2_Weapons"
+        ds2_image_paths = [join(ds2_img_folder_path, f) for f in listdir(ds2_img_folder_path)]
+        for path in ds2_image_paths:
+            img = Image.open(path)
+            image_tensor = pil_to_tensor(img)
+            # print(path)
+            # print(image_tensor.shape)
+            if image_tensor.shape[0] != 4:
+                continue
+            image_tensor = image_tensor / 255
+
+            image_tensor = self.transform(image_tensor)
+
+            self.samples.append(image_tensor)   
 
 
     def __len__(self):
@@ -39,16 +59,12 @@ class WeaponsDataset(Dataset):
         return self.samples[idx]
 
 if __name__ == "__main__":
-    transform = transforms.Compose(
-        [transforms.Resize((64, 64)),
-        transforms.Normalize((0.5, 0.5, 0.5, 0.5), (0.5, 0.5, 0.5, 0.5))]
-        )
-    dataset = WeaponsDataset(transform)
+    dataset = WeaponsDataset()
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
     examples = iter(dataloader)
     samples = next(examples)
     sample = samples[0]
-
+    print(len(dataloader))
     # print(sample.shape, sample.dtype)
     # sample = sample / 255
     
